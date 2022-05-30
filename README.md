@@ -1,1 +1,1 @@
-# stable-learning
+# Stable learning
