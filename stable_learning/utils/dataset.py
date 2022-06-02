@@ -6,6 +6,7 @@ import pandas as pd
 import torch
 from stable_learning.utils.mlp import MLP
 from stable_learning.utils.utils import manual_seed
+from termcolor import colored
 from torch import nn
 
 
@@ -56,7 +57,6 @@ def generate_sim_regression(
         s = np.clip(s, -clip, clip)
         v = np.clip(v, -clip, clip)
 
-
         beta = []
         for _ in range(p_s):
             beta.extend([1 / 3, -2 / 3, 1, -1 / 3, 2 / 3, -1])
@@ -77,17 +77,16 @@ def generate_sim_regression(
     return data
 
 
-def simulate_data(
-    n,
-    p,
-    r_train,
-    mlp_scale,
-    clip,
-    dim_v,
-    category,
-    seed,
-    mlp_seed,
-):
+def simulate_data(args):
+    n = args.n
+    p = args.p
+    r_train = args.r_train
+    mlp_scale = args.mlp_scale
+    clip = args.clip
+    dim_v = args.dim_v
+    category = args.category
+    seed = args.seed
+    mlp_seed = args.mlp_seed
     name = "sim_n_{}_p_{}_r_train_{}_mlp_{}_clip_{}_dimv_{}_category_{}{}".format(
         n,
         p,
@@ -101,9 +100,7 @@ def simulate_data(
     if not os.path.exists("data"):
         os.mkdir("data")
     if not os.path.exists("data/{}.pkl".format(name)):
-        print("============================================")
-        print("Generating dataset, {}".format(name))
-        print("============================================")
+        print(colored("Generating dataset, {}".format(name), "blue"))
         r_test = [-3.0, -2.5, -2.0, -1.5, -1.3, 1.3, 1.5, 2.0, 2.5, 3.0]
         if category == "mlp":
             mlp = random_mlp([3, 3, 3, 1], scale=mlp_scale, mlp_seed=mlp_seed)
@@ -114,9 +111,7 @@ def simulate_data(
         data_train = generate_sim_regression(
             n, p, [r_train], clip, dim_v, category, mlp
         )
-        data_test = generate_sim_regression(
-            n, p, r_test, clip, dim_v, category, mlp
-        )
+        data_test = generate_sim_regression(n, p, r_test, clip, dim_v, category, mlp)
         data = {
             "train": data_train,
             "test": data_test,
@@ -125,9 +120,9 @@ def simulate_data(
             f.write(pkl.dumps(data))
             f.close()
     else:
-        print("Reading from data, {}".format(name))
+        print(colored("Reading from data, {}".format(name), "blue"))
         with open("data/{}.pkl".format(name), "rb") as f:
             data = pkl.loads(f.read())
             f.close()
 
-    return data
+    return name, data

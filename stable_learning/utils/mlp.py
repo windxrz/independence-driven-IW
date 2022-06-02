@@ -3,9 +3,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, RandomSampler, TensorDataset
-# from torch.utils.tensorboard.writer import SummaryWriter
 
-from stable_learning.utils.loss import LSIF_loss, weighted_cross_entropy
+from stable_learning.utils.loss import LSIF_loss, weighted_cross_entropy, weighted_mse
 
 
 class MLP(nn.Module):
@@ -69,11 +68,6 @@ class MLPClassifier:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.mlp = self.mlp.to(device)
 
-        if self.tensorboard_dir is not None:
-            summary_writer = SummaryWriter(self.tensorboard_dir)
-        else:
-            summary_writer = None
-
         x = torch.from_numpy(x).type(torch.float)
         y = torch.from_numpy(y).view(-1, 1).type(torch.float)
 
@@ -115,9 +109,6 @@ class MLPClassifier:
                     )
                 )
 
-            if self.tensorboard_dir is not None:
-                summary_writer.add_scalar("mlp/train_loss", np.mean(l), epoch_i)
-
             loss = np.mean(l)
             if epoch_i == 0 or loss < min_l:
                 min_l = loss
@@ -125,9 +116,6 @@ class MLPClassifier:
 
             if epoch_i - min_epoch > 50:
                 break
-
-        if self.tensorboard_dir is not None:
-            summary_writer.close()
 
     def predict(self, x):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -137,4 +125,74 @@ class MLPClassifier:
             y = torch.sigmoid(self.mlp(x)).cpu().detach()
         else:
             y = F.relu(self.mlp(x)).cpu().detach()
+        return y
+
+
+class MLPRegressor:
+    def __init__(
+        self,
+        shapes,
+        batch_size=256,
+        lr=0.001,
+        epoch=1000,
+        optim="Adam",
+    ):
+        self.mlp = MLP(shapes, "relu")
+        self.batch_size = batch_size
+        self.lr = lr
+        self.optim = optim
+        self.epoch = epoch
+
+    def fit(self, X, y):
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.mlp = self.mlp.to(device)
+
+        X = torch.from_numpy(X).type(torch.float)
+        y = torch.from_numpy(y).view(-1, 1).type(torch.float)
+
+        data = TensorDataset(X, y)
+
+        sampler = RandomSampler(data)
+        train_dataloader = DataLoader(data, sampler=sampler, batch_size=self.batch_size)
+
+        optimizer = getattr(torch.optim, self.optim)(self.mlp.parameters(), lr=self.lr)
+
+        min_l = 0
+        min_epoch = 0
+
+        for epoch_i in range(self.epoch):
+            l = []
+            for batch in train_dataloader:
+                X = batch[0].to(device)
+                y = batch[1].to(device)
+                y_pred = self.mlp(X)
+                y_pred = torch.sigmoid(y_pred)
+                loss = weighted_mse(y, y_pred)
+                l.append(loss.item())
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+
+            if epoch_i % 25 == 24:
+                print(
+                    "Epoch {:>3} / {}: loss {:.6f}".format(
+                        epoch_i + 1,
+                        self.epoch,
+                        np.mean(l),
+                    )
+                )
+
+            loss = np.mean(l)
+            if epoch_i == 0 or loss < min_l:
+                min_l = loss
+                min_epoch = epoch_i
+
+            if epoch_i - min_epoch > 50:
+                break
+
+    def predict(self, X):
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.mlp = self.mlp.to(device)
+        X = torch.from_numpy(X).type(torch.float).to(device)
+        y = self.mlp(X).cpu().detach()
         return y
