@@ -4,8 +4,8 @@ import pickle as pkl
 import numpy as np
 import pandas as pd
 import torch
-from IDIW.utils.mlp import MLP
-from IDIW.utils.utils import manual_seed
+from idiw.utils.mlp import MLP
+from idiw.utils.utils import manual_seed
 from termcolor import colored
 from torch import nn
 

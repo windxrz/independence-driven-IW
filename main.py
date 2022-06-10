@@ -5,9 +5,9 @@ import os
 import numpy as np
 from termcolor import colored
 
-from IDIW.methods.methods import get_method
-from IDIW.utils.dataset import simulate_data
-from IDIW.utils.mlp import MLPRegressor
+from idiw.methods.methods import get_method
+from idiw.utils.dataset import simulate_data
+from idiw.utils.mlp import MLPRegressor
 
 
 def parse_args(more_args=None):

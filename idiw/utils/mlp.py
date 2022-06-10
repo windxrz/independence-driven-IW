@@ -2,9 +2,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from idiw.utils.loss import LSIF_loss, weighted_cross_entropy, weighted_mse
 from torch.utils.data import DataLoader, RandomSampler, TensorDataset
-
-from IDIW.utils.loss import LSIF_loss, weighted_cross_entropy, weighted_mse
 
 
 class MLP(nn.Module):

@@ -1,5 +1,5 @@
 import numpy as np
-from sklearn.linear_model import LinearRegression, Lasso
+from sklearn.linear_model import Lasso, LinearRegression
 
 
 class OLS:
