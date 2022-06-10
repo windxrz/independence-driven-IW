@@ -5,14 +5,14 @@ import os
 import numpy as np
 from termcolor import colored
 
-from stable_learning.methods.methods import get_method
-from stable_learning.utils.dataset import simulate_data
-from stable_learning.utils.mlp import MLPRegressor
+from IDIW.methods.methods import get_method
+from IDIW.utils.dataset import simulate_data
+from IDIW.utils.mlp import MLPRegressor
 
 
 def parse_args(more_args=None):
     parser = argparse.ArgumentParser()
-    # Simulation data parameters
+    # simulation data parameters
     parser.add_argument("-n", type=int, default=10000)
     parser.add_argument("-p", type=int, default=10)
     parser.add_argument("--r-train", type=float, default=2.5)
@@ -23,7 +23,7 @@ def parse_args(more_args=None):
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--mlp-seed", type=int, default=2333)
 
-    # Methods
+    # methods
     subparser = parser.add_subparsers(dest="method")
 
     ols = subparser.add_parser("OLS")
@@ -49,7 +49,9 @@ def parse_args(more_args=None):
 
 
 def get_feature_selection(data_name, data, method, method_seed):
-    print(colored("Running for feature selection method {}".format(method.name), "blue"))
+    print(
+        colored("Running for feature selection method {}".format(method.name), "blue")
+    )
     ans_path = os.path.join("results", data_name, method.name)
     if not os.path.exists(ans_path):
         os.makedirs(ans_path)
@@ -85,9 +87,7 @@ def main():
 
     data_name, data = simulate_data(args)
     method = get_method(args.method)(args)
-    feature_res = get_feature_selection(
-        data_name, data, method, args.method_seed
-    )
+    feature_res = get_feature_selection(data_name, data, method, args.method_seed)
     print(feature_res)
 
 

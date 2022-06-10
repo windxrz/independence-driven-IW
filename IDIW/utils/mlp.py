@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, RandomSampler, TensorDataset
 
-from stable_learning.utils.loss import LSIF_loss, weighted_cross_entropy, weighted_mse
+from IDIW.utils.loss import LSIF_loss, weighted_cross_entropy, weighted_mse
 
 
 class MLP(nn.Module):
